@@ -30,9 +30,9 @@ RUN --mount=type=cache,target=/root/.cache/pip \
     python -c "from launch import prepare_environment; prepare_environment()" --skip-torch-cuda-test
 
 # Install ControlNet Extension
-RUN git clone https://github.com/Mikubill/sd-webui-controlnet.git extensions/sd-webui-controlnet --no-checkout && \
+RUN git clone https://github.com/Mikubill/sd-webui-controlnet.git extensions/sd-webui-controlnet && \
     cd extensions/sd-webui-controlnet && \
-    git checkout 27864f4b5658633392a818c4765a3f651475f3a0 && \
+    git checkout 1.1.436 && \
     rm -rf .git
 
 # Set working directory
