@@ -3,6 +3,9 @@
 # ---------------------------------------------------------------------------- #
 FROM python:3.10.14-slim as build_final_image
 
+RUN apk add --no-cache wget && \
+    wget -q -O /model.safetensors https://huggingface.co/XpucT/Deliberate/resolve/main/Deliberate_v6.safetensors
+
 ARG A1111_RELEASE=v1.9.3
 
 ENV DEBIAN_FRONTEND=noninteractive \
