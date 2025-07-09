@@ -25,11 +25,11 @@ python /stable-diffusion-webui/webui.py \
     --skip-version-check \
     --no-hashing \
     --no-download-sd-model \
-    --ckpt-dir /network-volume/workspace/checkpoints \
-    --lora-dir /network-volume/workspace/loras \
+    --ckpt-dir /runpod-volume/checkpoints \
+    --lora-dir /runpod-volume/workspace/loras \
     --controlnet-dir /stable-diffusion-webui/extensions/sd-webui-controlnet \
-    --vae-dir /network-volume/vae \
-    --embeddings-dir /network-volume/embeddings &
+    --vae-dir /runpod-volume/vae \
+    --embeddings-dir /runpod-volume/embeddings &
 
 
 # --- 2. In the foreground, start the RunPod Handler ---
