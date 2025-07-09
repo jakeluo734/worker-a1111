@@ -1,15 +1,5 @@
 # ---------------------------------------------------------------------------- #
-#                         Stage 1: Download the models                         #
-# ---------------------------------------------------------------------------- #
-FROM alpine/git:2.43.0 as download
-
-# NOTE: CivitAI usually requires an API token, so you need to add it in the header
-#       of the wget command if you're using a model from CivitAI.
-RUN apk add --no-cache wget && \
-    wget -q -O /model.safetensors https://huggingface.co/XpucT/Deliberate/resolve/main/Deliberate_v6.safetensors
-
-# ---------------------------------------------------------------------------- #
-#                        Stage 2: Build the final image                        #
+#                      Build the final image                                   #
 # ---------------------------------------------------------------------------- #
 FROM python:3.10.14-slim as build_final_image
 
@@ -22,29 +12,38 @@ ENV DEBIAN_FRONTEND=noninteractive \
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
+# Install base dependencies
 RUN apt-get update && \
     apt install -y \
     fonts-dejavu-core rsync git jq moreutils aria2 wget libgoogle-perftools-dev libtcmalloc-minimal4 procps libgl1 libglib2.0-0 && \
     apt-get autoremove -y && rm -rf /var/lib/apt/lists/* && apt-get clean -y
 
+# Clone A1111, install python dependencies, and install ControlNet extension
 RUN --mount=type=cache,target=/root/.cache/pip \
     git clone https://github.com/AUTOMATIC1111/stable-diffusion-webui.git && \
     cd stable-diffusion-webui && \
     git reset --hard ${A1111_RELEASE} && \
     pip install xformers && \
     pip install -r requirements_versions.txt && \
-    python -c "from launch import prepare_environment; prepare_environment()" --skip-torch-cuda-test
+    python -c "from launch import prepare_environment; prepare_environment()" --skip-torch-cuda-test && \
+    # --- Install ControlNet Extension ---
+    git clone https://github.com/Mikubill/sd-webui-controlnet.git extensions/sd-webui-controlnet --no-checkout && \
+    cd extensions/sd-webui-controlnet && \
+    git checkout 27864f4b5658633392a818c4765a3f651475f3a0 && \
+    rm -rf .git
 
-COPY --from=download /model.safetensors /model.safetensors
+# Set working directory
+WORKDIR /stable-diffusion-webui
 
-# install dependencies
+# Install handler dependencies
 COPY requirements.txt .
 RUN --mount=type=cache,target=/root/.cache/pip \
     pip install --no-cache-dir -r requirements.txt
 
+# Add handler source code and make start script executable
 COPY test_input.json .
-
 ADD src .
+RUN chmod +x /stable-diffusion-webui/start.sh
 
-RUN chmod +x /start.sh
-CMD /start.sh
+# Set the entrypoint to the start script
+CMD ["/stable-diffusion-webui/start.sh"]
