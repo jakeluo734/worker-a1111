@@ -18,16 +18,19 @@ RUN apt-get update && \
     fonts-dejavu-core rsync git jq moreutils aria2 wget libgoogle-perftools-dev libtcmalloc-minimal4 procps libgl1 libglib2.0-0 && \
     apt-get autoremove -y && rm -rf /var/lib/apt/lists/* && apt-get clean -y
 
-# test Clone A1111, install python dependencies, and install ControlNet extension
+# Clone A1111 and install dependencies in separate, clearer steps
+RUN git clone https://github.com/AUTOMATIC1111/stable-diffusion-webui.git
+WORKDIR /stable-diffusion-webui
+RUN git reset --hard ${A1111_RELEASE}
+
+# Install Python packages
 RUN --mount=type=cache,target=/root/.cache/pip \
-    git clone https://github.com/AUTOMATIC1111/stable-diffusion-webui.git && \
-    cd stable-diffusion-webui && \
-    git reset --hard ${A1111_RELEASE} && \
     pip install xformers && \
     pip install -r requirements_versions.txt && \
-    python -c "from launch import prepare_environment; prepare_environment()" --skip-torch-cuda-test && \
-    # --- Install ControlNet Extension ---
-    git clone https://github.com/Mikubill/sd-webui-controlnet.git extensions/sd-webui-controlnet --no-checkout && \
+    python -c "from launch import prepare_environment; prepare_environment()" --skip-torch-cuda-test
+
+# Install ControlNet Extension
+RUN git clone https://github.com/Mikubill/sd-webui-controlnet.git extensions/sd-webui-controlnet --no-checkout && \
     cd extensions/sd-webui-controlnet && \
     git checkout 27864f4b5658633392a818c4765a3f651475f3a0 && \
     rm -rf .git
