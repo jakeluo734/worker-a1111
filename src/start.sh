@@ -2,6 +2,10 @@
 
 echo "✅ Worker Initiated"
 
+echo "🔗 Symlinking files from Network Volume"
+rm -rf /workspace && \
+  ln -s /runpod-volume /workspace
+
 # --- 1. In the background, start the A1111 WebUI API ---
 echo "🚀 Starting WebUI API on Port 3000..."
 
@@ -25,11 +29,11 @@ python /stable-diffusion-webui/webui.py \
     --skip-version-check \
     --no-hashing \
     --no-download-sd-model \
-    --ckpt-dir /runpod-volume/workspace/checkpoints \
-    --lora-dir /runpod-volume/workspace/loras \
+    --ckpt-dir /workspace/checkpoints \
+    --lora-dir /workspace/loras \
     --controlnet-dir /stable-diffusion-webui/extensions/sd-webui-controlnet \
-    --vae-dir /runpod-volume/workspace/vae \
-    --embeddings-dir /runpod-volume/workspace/embeddings &
+    --vae-dir /workspace/vae \
+    --embeddings-dir /workspace/embeddings &
 
 
 # --- 2. In the foreground, start the RunPod Handler ---
