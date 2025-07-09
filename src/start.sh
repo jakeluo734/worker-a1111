@@ -1,17 +1,16 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 echo "✅ Worker Initiated"
 
-# --- 1. 在后台启动 A1111 WebUI API ---
+# --- 1. In the background, start the A1111 WebUI API ---
 echo "🚀 Starting WebUI API on Port 3000..."
 
-# 使用 tcmalloc 进行内存优化
 TCMALLOC="$(ldconfig -p | grep -Po "libtcmalloc.so.\d" | head -n 1)"
 export LD_PRELOAD="${TCMALLOC}"
 export PYTHONUNBUFFERED=true
 
-# 启动 A1111 API 作为一个后台进程 (&)
-# 我们保留了你的大部分原始启动参数，并替换了模型加载部分
+# Launch A1111 API as a background process (&)
+# This uses the corrected arguments for A1111 v1.9.3
 python /stable-diffusion-webui/webui.py \
     --xformers \
     --no-half-vae \
@@ -26,16 +25,13 @@ python /stable-diffusion-webui/webui.py \
     --skip-version-check \
     --no-hashing \
     --no-download-sd-model \
-    --checkpoint-dir /network-volume/checkpoints \
+    --ckpt-dir /network-volume/checkpoints \
     --lora-dir /network-volume/loras \
-    --controlnet-models-path /network-volume/controlnet_models \
+    --controlnet-dir /stable-diffusion-webui/extensions/sd-webui-controlnet \
     --vae-dir /network-volume/vae \
     --embeddings-dir /network-volume/embeddings &
 
 
-# --- 2. 在前台启动 RunPod Handler ---
+# --- 2. In the foreground, start the RunPod Handler ---
 echo "🎧 Starting RunPod Handler to listen for jobs..."
-
-# 这个进程会接收 RunPod 的任务请求
-# 注意：根据你的 Dockerfile，handler.py 最终的路径是 /stable-diffusion-webui/handler.py
 python -u /stable-diffusion-webui/handler.py
