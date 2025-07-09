@@ -25,8 +25,8 @@ python /stable-diffusion-webui/webui.py \
     --skip-version-check \
     --no-hashing \
     --no-download-sd-model \
-    --ckpt-dir /network-volume/checkpoints \
-    --lora-dir /network-volume/loras \
+    --ckpt-dir /network-volume/workspace/checkpoints \
+    --lora-dir /network-volume/workspace/loras \
     --controlnet-dir /stable-diffusion-webui/extensions/sd-webui-controlnet \
     --vae-dir /network-volume/vae \
     --embeddings-dir /network-volume/embeddings &
