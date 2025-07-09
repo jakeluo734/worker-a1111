@@ -45,6 +45,7 @@ RUN git clone https://github.com/Mikubill/sd-webui-controlnet.git extensions/sd-
 # Set working directory
 WORKDIR /stable-diffusion-webui
 
+COPY --from=download /model.safetensors /model.safetensors
 # Install handler dependencies
 COPY requirements.txt .
 RUN --mount=type=cache,target=/root/.cache/pip \
