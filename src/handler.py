@@ -67,7 +67,7 @@ def handler(event):
     endpoint = event.get("endpoint", "txt2img")
     result = run_inference(event["input"], endpoint=endpoint)
 
-    # Save images to /runpod-volume/output and generate pre-signed URLs
+    # Save images to /runpod-volume/output and generate pre-signed URLs by idx
     output_dir = "/runpod-volume/output"
     os.makedirs(output_dir, exist_ok=True)
     image_urls = []
