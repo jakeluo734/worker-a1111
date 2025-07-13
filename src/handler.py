@@ -55,6 +55,13 @@ def get_presigned_url_s3(file_path):
     REGION = os.environ.get("RUNPOD_S3_REGION", "EU-RO-1")  # default to EU-RO-1
     ENDPOINT_URL = os.environ.get("RUNPOD_S3_ENDPOINT", "https://s3api-eu-ro-1.runpod.io")
 
+    # Debug prints for troubleshooting
+    print("DEBUG: S3_ACCESS_KEY set:", bool(S3_ACCESS_KEY))
+    print("DEBUG: S3_SECRET_KEY set:", bool(S3_SECRET_KEY))
+    print("DEBUG: VOLUME_ID set:", bool(VOLUME_ID))
+    print("DEBUG: REGION:", REGION)
+    print("DEBUG: ENDPOINT_URL:", ENDPOINT_URL)
+
     if not S3_ACCESS_KEY or not S3_SECRET_KEY or not VOLUME_ID:
         # For test/build step, return a dummy URL
         return f"https://dummy-url-for-testing/{file_path}"
