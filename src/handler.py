@@ -2,6 +2,8 @@ import time
 import runpod
 import requests
 from requests.adapters import HTTPAdapter, Retry
+import os
+import base64
 
 LOCAL_URL = "http://127.0.0.1:3000/sdapi/v1"
 
@@ -44,6 +46,17 @@ def run_inference(inference_request, endpoint="txt2img"):
     return response.json()
 
 
+def get_presigned_url(file_path):
+    RUNPOD_API_KEY = os.environ["RUNPOD_API_KEY"]
+    VOLUME_ID = os.environ["RUNPOD_VOLUME_ID"]
+    RUNPOD_API_URL = f"https://api.runpod.io/v2/volume/{VOLUME_ID}/presigned-url"
+    headers = {"Authorization": f"Bearer {RUNPOD_API_KEY}"}
+    data = {"path": file_path, "operation": "read"}
+    response = requests.post(RUNPOD_API_URL, json=data, headers=headers)
+    response.raise_for_status()
+    return response.json()["url"]
+
+
 # ---------------------------------------------------------------------------- #
 #                                RunPod Handler                                #
 # ---------------------------------------------------------------------------- #
@@ -52,10 +65,21 @@ def handler(event):
     This is the handler function that will be called by the serverless.
     """
     endpoint = event.get("endpoint", "txt2img")
-    json = run_inference(event["input"], endpoint=endpoint)
+    result = run_inference(event["input"], endpoint=endpoint)
 
-    # return the output that you want to be returned like pre-signed URLs to output artifacts
-    return json
+    # Save images to /runpod-volume/output and generate pre-signed URLs
+    output_dir = "/runpod-volume/output"
+    os.makedirs(output_dir, exist_ok=True)
+    image_urls = []
+    for idx, img_b64 in enumerate(result.get("images", [])):
+        img_path = f"output/image_{idx}.png"  # relative to /runpod-volume
+        abs_img_path = os.path.join("/runpod-volume", img_path)
+        with open(abs_img_path, "wb") as f:
+            f.write(base64.b64decode(img_b64))
+        url = get_presigned_url(img_path)
+        image_urls.append(url)
+
+    return {"output_urls": image_urls}
 
 
 if __name__ == "__main__":
