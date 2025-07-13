@@ -4,6 +4,8 @@ import requests
 from requests.adapters import HTTPAdapter, Retry
 import os
 import base64
+import boto3
+from botocore.client import Config
 
 LOCAL_URL = "http://127.0.0.1:3000/sdapi/v1"
 
@@ -46,18 +48,32 @@ def run_inference(inference_request, endpoint="txt2img"):
     return response.json()
 
 
-def get_presigned_url(file_path):
+def get_presigned_url_s3(file_path):
+    S3_ACCESS_KEY = os.environ.get("RUNPOD_S3_ACCESS_KEY")
+    S3_SECRET_KEY = os.environ.get("RUNPOD_S3_SECRET_KEY")
     VOLUME_ID = os.environ.get("RUNPOD_VOLUME_ID")
-    RUNPOD_API_KEY = os.environ.get("RUNPOD_API_KEY")
-    if not VOLUME_ID or not RUNPOD_API_KEY:
-        # For test/build step, return a dummy URL for test only
+    REGION = os.environ.get("RUNPOD_S3_REGION", "EU-RO-1")  # default to EU-RO-1
+    ENDPOINT_URL = os.environ.get("RUNPOD_S3_ENDPOINT", "https://s3api-eu-ro-1.runpod.io")
+
+    if not S3_ACCESS_KEY or not S3_SECRET_KEY or not VOLUME_ID:
+        # For test/build step, return a dummy URL
         return f"https://dummy-url-for-testing/{file_path}"
-    RUNPOD_API_URL = f"https://api.runpod.io/v2/volume/{VOLUME_ID}/presigned-url"
-    headers = {"Authorization": f"Bearer {RUNPOD_API_KEY}"}
-    data = {"path": file_path, "operation": "read"}
-    response = requests.post(RUNPOD_API_URL, json=data, headers=headers)
-    response.raise_for_status()
-    return response.json()["url"]
+
+    s3 = boto3.client(
+        "s3",
+        aws_access_key_id=S3_ACCESS_KEY,
+        aws_secret_access_key=S3_SECRET_KEY,
+        region_name=REGION,
+        endpoint_url=ENDPOINT_URL,
+        config=Config(signature_version="s3v4"),
+    )
+
+    url = s3.generate_presigned_url(
+        "get_object",
+        Params={"Bucket": VOLUME_ID, "Key": file_path},
+        ExpiresIn=3600  # 1 hour
+    )
+    return url
 
 
 # ---------------------------------------------------------------------------- #
@@ -70,7 +86,7 @@ def handler(event):
     endpoint = event.get("endpoint", "txt2img")
     result = run_inference(event["input"], endpoint=endpoint)
 
-    # Save images to /runpod-volume/output and generate pre-signed URLs by idx
+    # Save images to /runpod-volume/output and generate pre-signed URLs
     output_dir = "/runpod-volume/output"
     os.makedirs(output_dir, exist_ok=True)
     image_urls = []
@@ -79,7 +95,7 @@ def handler(event):
         abs_img_path = os.path.join("/runpod-volume", img_path)
         with open(abs_img_path, "wb") as f:
             f.write(base64.b64decode(img_b64))
-        url = get_presigned_url(img_path)
+        url = get_presigned_url_s3(img_path)
         image_urls.append(url)
 
     return {"output_urls": image_urls}
