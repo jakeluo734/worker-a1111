@@ -7,6 +7,7 @@ FROM alpine/git:2.43.0 as download
 #       of the wget command if you're using a model from CivitAI.
 RUN apk add --no-cache wget && \
     wget -q -O /DreamShaper.safetensors "https://civitai.com/api/download/models/128713?type=Model&format=SafeTensor&size=pruned&fp=fp16" && \
+    wget -q -O /3danime.safetensors "https://civitai.com/api/download/models/128046?type=Model&format=SafeTensor&size=pruned&fp=fp16" && \
     wget -q -O /XL.safetensors "https://civitai.com/api/download/models/354657?type=Model&format=SafeTensor&size=full&fp=fp16"
 
 # ---------------------------------------------------------------------------- #
@@ -38,6 +39,7 @@ RUN --mount=type=cache,target=/root/.cache/pip \
 
 COPY --from=download /DreamShaper.safetensors /stable-diffusion-webui/models/Stable-diffusion/DreamShaper.safetensors
 COPY --from=download /XL.safetensors /stable-diffusion-webui/models/Stable-diffusion/XL.safetensors
+COPY --from=download /3danime.safetensors /stable-diffusion-webui/models/Stable-diffusion/3danime.safetensors
 
 # install dependencies
 COPY requirements.txt .
