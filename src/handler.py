@@ -50,7 +50,7 @@ def get_presigned_url(file_path):
     VOLUME_ID = os.environ.get("RUNPOD_VOLUME_ID")
     RUNPOD_API_KEY = os.environ.get("RUNPOD_API_KEY")
     if not VOLUME_ID or not RUNPOD_API_KEY:
-        # For test/build step, return a dummy URL
+        # For test/build step, return a dummy URL for test only
         return f"https://dummy-url-for-testing/{file_path}"
     RUNPOD_API_URL = f"https://api.runpod.io/v2/volume/{VOLUME_ID}/presigned-url"
     headers = {"Authorization": f"Bearer {RUNPOD_API_KEY}"}
