@@ -12,7 +12,7 @@ python /stable-diffusion-webui/webui.py \
   --skip-python-version-check \
   --skip-torch-cuda-test \
   --skip-install \
-  --ckpt /DreamShaper.safetensors \
+  --ckpt /stable-diffusion-webui/models/Stable-diffusion/DreamShaper.safetensors \
   --opt-sdp-attention \
   --disable-safe-unpickle \
   --port 3000 \
