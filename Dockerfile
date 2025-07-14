@@ -40,6 +40,10 @@ RUN --mount=type=cache,target=/root/.cache/pip \
 # Install ControlNet extension
 RUN git clone https://github.com/Mikubill/sd-webui-controlnet.git /stable-diffusion-webui/extensions/sd-webui-controlnet
 
+COPY --from=download /XL.safetensors /stable-diffusion-webui/models/Stable-diffusion/XL.safetensors
+COPY --from=download /3danime.safetensors /stable-diffusion-webui/models/Stable-diffusion/3danime.safetensors
+COPY --from=download /DreamShaper.safetensors /stable-diffusion-webui/models/Stable-diffusion/DreamShaper.safetensors
+
 # Download ControlNet model for canny
 RUN mkdir -p /stable-diffusion-webui/extensions/sd-webui-controlnet/models && \
     wget -O /stable-diffusion-webui/extensions/sd-webui-controlnet/models/control_v11p_sd15_canny.pth \
