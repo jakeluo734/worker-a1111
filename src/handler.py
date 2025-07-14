@@ -119,7 +119,11 @@ def handler(event):
         url = upload_file_to_uploadthing(abs_img_path)
         image_urls.append(url)
 
-    return {"output_urls": image_urls}
+   return {
+       "output_urls": image_urls,
+       "parameters": result.get("parameters"),
+       "info": result.get("info")
+   }
 
 
 if __name__ == "__main__":
