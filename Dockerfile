@@ -42,7 +42,8 @@ COPY --from=download /3danime.safetensors /stable-diffusion-webui/models/Stable-
 COPY --from=download /DreamShaper.safetensors /stable-diffusion-webui/models/Stable-diffusion/DreamShaper.safetensors
 
 # Download ControlNet model for canny
-RUN wget -O /stable-diffusion-webui/extensions/sd-webui-controlnet/models/control_v11p_sd15_canny.pth \
+RUN mkdir -p /stable-diffusion-webui/extensions/sd-webui-controlnet/models && \
+    wget -O /stable-diffusion-webui/extensions/sd-webui-controlnet/models/control_v11p_sd15_canny.pth \
     https://huggingface.co/lllyasviel/ControlNet-v1-1/resolve/459bf90295ac305bc3ae8266e39a089f433eab4f/control_v11p_sd15_canny.pth
 
 # install dependencies
