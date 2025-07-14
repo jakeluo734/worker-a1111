@@ -42,7 +42,7 @@ def wait_for_service(url):
 
         time.sleep(0.2)
 
-def run_inference(inference_request, endpoint="txt2img"):
+def run_inference(inference_request, endpoint="img2img"):
     """
     Run inference on a request for the specified endpoint.
     """
@@ -101,7 +101,7 @@ def handler(event):
     This is the handler function that will be called by the serverless.
     """
     print(f"[DEBUG] Incoming event: {event}")
-    endpoint = event.get("endpoint", "txt2img")
+    endpoint = event.get("endpoint", "img2img")
     print(f"[DEBUG] Using endpoint: {endpoint}")
     result = run_inference(event["input"], endpoint=endpoint)
 
