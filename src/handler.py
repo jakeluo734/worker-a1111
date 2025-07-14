@@ -100,6 +100,7 @@ def handler(event):
     """
     This is the handler function that will be called by the serverless.
     """
+    print(f"[DEBUG] Incoming event: {event}")
     endpoint = event.get("endpoint", "txt2img")
     print(f"[DEBUG] Using endpoint: {endpoint}")
     result = run_inference(event["input"], endpoint=endpoint)
