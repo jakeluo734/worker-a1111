@@ -37,14 +37,17 @@ RUN --mount=type=cache,target=/root/.cache/pip \
     pip install -r requirements_versions.txt && \
     python -c "from launch import prepare_environment; prepare_environment()" --skip-torch-cuda-test
 
-COPY --from=download /XL.safetensors /stable-diffusion-webui/models/Stable-diffusion/XL.safetensors
-COPY --from=download /3danime.safetensors /stable-diffusion-webui/models/Stable-diffusion/3danime.safetensors
-COPY --from=download /DreamShaper.safetensors /stable-diffusion-webui/models/Stable-diffusion/DreamShaper.safetensors
+# Install ControlNet extension
+RUN git clone https://github.com/Mikubill/sd-webui-controlnet.git /stable-diffusion-webui/extensions/sd-webui-controlnet
 
 # Download ControlNet model for canny
 RUN mkdir -p /stable-diffusion-webui/extensions/sd-webui-controlnet/models && \
     wget -O /stable-diffusion-webui/extensions/sd-webui-controlnet/models/control_v11p_sd15_canny.pth \
     https://huggingface.co/lllyasviel/ControlNet-v1-1/resolve/459bf90295ac305bc3ae8266e39a089f433eab4f/control_v11p_sd15_canny.pth
+
+# Download IPAdapter model for ControlNet (ip-adapter-plus-face_sd15)
+RUN wget -O /stable-diffusion-webui/extensions/sd-webui-controlnet/models/ip-adapter-plus-face_sd15.safetensors \
+    https://huggingface.co/h94/IP-Adapter/resolve/main/models/ip-adapter-plus-face_sd15.safetensors
 
 # Download all LoRA models from the provided Google Drive folder
 RUN apt-get update && \
