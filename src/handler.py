@@ -6,6 +6,11 @@ import os
 import base64
 import boto3
 from botocore.client import Config
+import mimetypes
+import random
+import string
+import hashlib
+from pathlib import Path
 
 LOCAL_URL = "http://127.0.0.1:3000/sdapi/v1"
 
@@ -48,39 +53,48 @@ def run_inference(inference_request, endpoint="txt2img"):
     return response.json()
 
 
-def get_presigned_url_s3(file_path):
-    S3_ACCESS_KEY = os.environ.get("RUNPOD_S3_ACCESS_KEY")
-    S3_SECRET_KEY = os.environ.get("RUNPOD_S3_SECRET_KEY")
-    VOLUME_ID = os.environ.get("RUNPOD_VOLUME_ID")
-    REGION = os.environ.get("RUNPOD_S3_REGION", "EU-RO-1")  # default to EU-RO-1
-    ENDPOINT_URL = os.environ.get("RUNPOD_S3_ENDPOINT", "https://s3api-eu-ro-1.runpod.io")
+def upload_file_to_uploadthing(file_path):
+    file_path = Path(file_path)
+    file_name = file_path.name
+    file_extension = file_path.suffix
+    random_string = ''.join(random.choices(string.ascii_letters + string.digits, k=8))
+    md5_hash = hashlib.md5(random_string.encode()).hexdigest()
+    new_file_name = f"{md5_hash}{file_extension}"
+    file_size = file_path.stat().st_size
+    file_type, _ = mimetypes.guess_type(str(file_path))
 
-    # Debug prints for troubleshooting
-    print("DEBUG: S3_ACCESS_KEY set:", bool(S3_ACCESS_KEY))
-    print("DEBUG: S3_SECRET_KEY set:", bool(S3_SECRET_KEY))
-    print("DEBUG: VOLUME_ID set:", bool(VOLUME_ID))
-    print("DEBUG: REGION:", REGION)
-    print("DEBUG: ENDPOINT_URL:", ENDPOINT_URL)
+    with open(file_path, "rb") as file:
+        file_content = file.read()
 
-    if not S3_ACCESS_KEY or not S3_SECRET_KEY or not VOLUME_ID:
-        # For test/build step, return a dummy URL
-        return f"https://dummy-url-for-testing/{file_path}"
+    file_info = {"name": new_file_name, "size": file_size, "type": file_type}
+    uploadthing_api_key = os.getenv('UPLOADTHING_API_KEY')
+    if not uploadthing_api_key:
+        raise ValueError("UPLOADTHING_API_KEY environment variable not set")
 
-    s3 = boto3.client(
-        "s3",
-        aws_access_key_id=S3_ACCESS_KEY,
-        aws_secret_access_key=S3_SECRET_KEY,
-        region_name=REGION,
-        endpoint_url=ENDPOINT_URL,
-        config=Config(signature_version="s3v4"),
+    headers = {"x-uploadthing-api-key": uploadthing_api_key}
+    data = {
+        "contentDisposition": "inline",
+        "acl": "public-read",
+        "files": [file_info],
+    }
+
+    # Get presigned URL
+    presigned_response = requests.post(
+        "https://api.uploadthing.com/v6/uploadFiles",
+        headers=headers,
+        json=data,
     )
+    presigned_response.raise_for_status()
+    presigned = presigned_response.json()["data"][0]
+    upload_url = presigned["url"]
+    fields = presigned["fields"]
 
-    url = s3.generate_presigned_url(
-        "get_object",
-        Params={"Bucket": VOLUME_ID, "Key": file_path},
-        ExpiresIn=3600  # 1 hour
-    )
-    return url
+    # Perform actual upload
+    files = {"file": file_content}
+    upload_response = requests.post(upload_url, data=fields, files=files)
+    upload_response.raise_for_status()
+
+    return presigned['fileUrl']
 
 
 # ---------------------------------------------------------------------------- #
@@ -93,7 +107,7 @@ def handler(event):
     endpoint = event.get("endpoint", "txt2img")
     result = run_inference(event["input"], endpoint=endpoint)
 
-    # Save images to /runpod-volume/output and generate pre-signed URLs
+    # Save images to /runpod-volume/output and upload to UploadThing
     output_dir = "/runpod-volume/output"
     os.makedirs(output_dir, exist_ok=True)
     image_urls = []
@@ -102,7 +116,7 @@ def handler(event):
         abs_img_path = os.path.join("/runpod-volume", img_path)
         with open(abs_img_path, "wb") as f:
             f.write(base64.b64decode(img_b64))
-        url = get_presigned_url_s3(img_path)
+        url = upload_file_to_uploadthing(abs_img_path)
         image_urls.append(url)
 
     return {"output_urls": image_urls}
