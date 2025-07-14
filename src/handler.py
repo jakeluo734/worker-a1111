@@ -18,7 +18,6 @@ automatic_session = requests.Session()
 retries = Retry(total=10, backoff_factor=0.1, status_forcelist=[502, 503, 504])
 automatic_session.mount('http://', HTTPAdapter(max_retries=retries))
 
-
 # ---------------------------------------------------------------------------- #
 #                              Automatic Functions                             #
 # ---------------------------------------------------------------------------- #
@@ -43,7 +42,6 @@ def wait_for_service(url):
 
         time.sleep(0.2)
 
-
 def run_inference(inference_request, endpoint="txt2img"):
     """
     Run inference on a request for the specified endpoint.
@@ -51,7 +49,6 @@ def run_inference(inference_request, endpoint="txt2img"):
     response = automatic_session.post(url=f'{LOCAL_URL}/{endpoint}',
                                       json=inference_request, timeout=600)
     return response.json()
-
 
 def upload_file_to_uploadthing(file_path):
     uploadthing_api_key = os.getenv('UPLOADTHING_API_KEY')
@@ -96,7 +93,6 @@ def upload_file_to_uploadthing(file_path):
 
     return presigned['fileUrl']
 
-
 # ---------------------------------------------------------------------------- #
 #                                RunPod Handler                                #
 # ---------------------------------------------------------------------------- #
@@ -124,7 +120,6 @@ def handler(event):
         "parameters": result.get("parameters"),
         "info": result.get("info")
     }
-
 
 if __name__ == "__main__":
     wait_for_service(url=f'{LOCAL_URL}/sd-models')
