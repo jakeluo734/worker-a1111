@@ -101,6 +101,7 @@ def handler(event):
     This is the handler function that will be called by the serverless.
     """
     endpoint = event.get("endpoint", "txt2img")
+    print(f"[DEBUG] Using endpoint: {endpoint}")
     result = run_inference(event["input"], endpoint=endpoint)
 
     # Save images to /runpod-volume/output and upload to UploadThing
@@ -118,7 +119,8 @@ def handler(event):
     return {
         "output_urls": image_urls,
         "parameters": result.get("parameters"),
-        "info": result.get("info")
+        "info": result.get("info"),
+        "endpoint": endpoint
     }
 
 if __name__ == "__main__":
