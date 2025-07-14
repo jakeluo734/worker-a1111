@@ -38,9 +38,7 @@ RUN --mount=type=cache,target=/root/.cache/pip \
     python -c "from launch import prepare_environment; prepare_environment()" --skip-torch-cuda-test
 
 # Install ControlNet extension
-RUN git clone https://github.com/Mikubill/sd-webui-controlnet.git /stable-diffusion-webui/extensions/sd-webui-controlnet
-
-RUN pip install controlnet-aux
+RUN git clone --branch 1.1.436 https://github.com/Mikubill/sd-webui-controlnet.git /stable-diffusion-webui/extensions/sd-webui-controlnet
 
 COPY --from=download /XL.safetensors /stable-diffusion-webui/models/Stable-diffusion/XL.safetensors
 COPY --from=download /3danime.safetensors /stable-diffusion-webui/models/Stable-diffusion/3danime.safetensors
