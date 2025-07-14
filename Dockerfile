@@ -47,7 +47,8 @@ RUN mkdir -p /stable-diffusion-webui/extensions/sd-webui-controlnet/models && \
     https://huggingface.co/lllyasviel/ControlNet-v1-1/resolve/459bf90295ac305bc3ae8266e39a089f433eab4f/control_v11p_sd15_canny.pth
 
 # Download and extract LoRA models from Google Drive
-RUN pip install gdown && \
+RUN apt-get update && apt-get install -y unzip && \
+    pip install gdown && \
     mkdir -p /stable-diffusion-webui/models/Lora && \
     gdown --fuzzy "https://drive.google.com/file/d/1V3Re4LoS9Om5qia0NFhJJ0858ixBAOnu/view?usp=drive_link" -O /tmp/loras.zip && \
     unzip /tmp/loras.zip -d /stable-diffusion-webui/models/Lora/ && \
