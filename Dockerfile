@@ -53,6 +53,11 @@ RUN mkdir -p /stable-diffusion-webui/extensions/sd-webui-controlnet/models && \
 RUN wget -O /stable-diffusion-webui/extensions/sd-webui-controlnet/models/ip-adapter-plus-face_sd15.safetensors \
     https://huggingface.co/h94/IP-Adapter/resolve/main/models/ip-adapter-plus-face_sd15.safetensors
 
+# Download IPAdapter CLIP-ViT-H model weights
+RUN mkdir -p /stable-diffusion-webui/extensions/sd-webui-controlnet/models/ipadapter && \
+    wget -O /stable-diffusion-webui/extensions/sd-webui-controlnet/models/ipadapter/clip_vit_h.safetensors \
+    http://huggingface.co/h94/IP-Adapter/resolve/main/models/image_encoder/model.safetensors
+
 # Download all LoRA models from the provided Google Drive folder
 RUN apt-get update && \
     pip install gdown && \
